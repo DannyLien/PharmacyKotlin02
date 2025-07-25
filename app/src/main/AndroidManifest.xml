@@ -15,13 +15,15 @@
         android:logo="@drawable/mask_map_logo_64"
         android:roundIcon="@drawable/mask_map_logo_64"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PharmacyKotlin02"
+        android:theme="@style/Theme.AppCompat.Light"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".PharmacyDetail"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
