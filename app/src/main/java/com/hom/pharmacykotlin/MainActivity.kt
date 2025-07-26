@@ -15,11 +15,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hom.pharmacykotlin.data.PharmacyInfo
 import com.hom.pharmacykotlin.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private var selectTown: String = ""
+    private var selectCounty: String = ""
     private var pharmInfoData: PharmacyInfo? = null
     private lateinit var viewModel: PharmViewModel
 
@@ -67,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         spinnerCounty.prompt = " Select County "
         spinnerCounty.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                val selectCounty = spinnerCounty.selectedItem.toString()
+                selectCounty = spinnerCounty.selectedItem.toString()
                 Log.d(TAG, "onItemSelected: mask- selectCounty- ${selectCounty}")
                 viewModel.vmUpdataTown(selectCounty)
             }
@@ -77,19 +80,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setSpinnerTown(selectTown: List<String>) {
+    private fun setSpinnerTown(townName: List<String>) {
         val townAdapter =
-            ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, selectTown)
+            ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, townName)
                 .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         spinnerTown.adapter = townAdapter
         spinnerTown.prompt = " Select Town "
         spinnerTown.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                val selectTown = spinnerTown.selectedItem.toString()
+                selectTown = spinnerTown.selectedItem.toString()
                 Log.d(TAG, "onItemSelected: mask- selectTown- ${selectTown}")
+                setRecyclerPharm(pharmInfoData)
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
+            }
+        }
+    }
+
+    private fun setRecyclerPharm(pharmInfoData: PharmacyInfo?) {
+        pharmInfoData?.also { p ->
+            val filterData = p.features.filter {
+                it.properties.county == selectCounty &&
+                        it.properties.town == selectTown
+            }
+            if (filterData != null) {
+                recy.adapter = PharmAdapter(filterData)
             }
         }
     }
@@ -99,6 +115,8 @@ class MainActivity : AppCompatActivity() {
         spinnerTown = binding.spinnerTown
         recy = binding.recyclerPharm
         progressBar = binding.progressBar
+        recy.setHasFixedSize(true)
+        recy.layoutManager = GridLayoutManager(this, 1)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
