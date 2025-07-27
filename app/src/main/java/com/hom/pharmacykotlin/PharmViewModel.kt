@@ -17,7 +17,6 @@ class PharmViewModel : ViewModel() {
     var getPharmInfoData = MutableLiveData<PharmacyInfo>()
     var getAllCounty = MutableLiveData<List<String>>()
     var getAllTown = MutableLiveData<List<String>>()
-
     //
     private val TAG: String? = PharmViewModel::class.java.simpleName
 
@@ -57,7 +56,6 @@ class PharmViewModel : ViewModel() {
             getAllTown.postValue(allTown)
         }
     }
-
 
 }
 

@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
                         it.properties.town == selectTown
             }
             if (filterData != null) {
-                recy.adapter = PharmAdapter(filterData)
+                recy.adapter = PharmAdapter(this,filterData)
             }
         }
     }
@@ -140,6 +140,7 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
 }
 
 

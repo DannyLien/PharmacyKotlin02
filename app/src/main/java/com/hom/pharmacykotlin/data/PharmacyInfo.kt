@@ -1,5 +1,6 @@
 package com.hom.pharmacykotlin.data
 
+
 data class PharmacyInfo(
     val features: List<Feature>,
     val type: String
