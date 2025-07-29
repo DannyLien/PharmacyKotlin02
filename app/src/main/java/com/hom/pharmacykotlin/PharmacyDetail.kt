@@ -1,5 +1,6 @@
 package com.hom.pharmacykotlin
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -58,8 +59,9 @@ class PharmacyDetail : AppCompatActivity() {
         pharmAddress = binding.tvAddressDet
     }
 
-    fun setShowMaps(view:View){
-
+    fun setShowMaps(view: View) {
+        Intent(this, MapsActivity::class.java)
+            .also { startActivity(it) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
