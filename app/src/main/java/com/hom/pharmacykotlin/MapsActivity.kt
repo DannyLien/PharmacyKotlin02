@@ -2,16 +2,15 @@ package com.hom.pharmacykotlin
 
 import android.Manifest
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -20,10 +19,19 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
+import com.hom.pharmacykotlin.PharmViewModel.Companion.pharmUrl_132
+import com.hom.pharmacykotlin.data.Feature
+import com.hom.pharmacykotlin.data.PharmacyInfo
 import com.hom.pharmacykotlin.databinding.ActivityMapsBinding
-import kotlin.math.truncate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.net.URL
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+    private var pharmInfoData: PharmacyInfo? = null
+    private var pharm: Feature? = null
     private val TAG: String? = MapsActivity::class.java.simpleName
     private var myMarker: Marker? = null
     private lateinit var fusedLPC: FusedLocationProviderClient
@@ -56,6 +64,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        upDataLocation()
         myLocation()
     }
 
@@ -107,6 +116,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d(TAG, "upDataLocation: mask- gps- ${it.latitude} , ${it.longitude}")
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f))
             myMarker = mMap.addMarker(MarkerOptions().position(latlng).title("My Location"))
+        }
+        setUpdataPharm()
+
+    }
+
+    private fun setUpdataPharm() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val json = URL(pharmUrl_132).readText()
+            pharmInfoData = Gson().fromJson(json, PharmacyInfo::class.java)
+            runOnUiThread {
+                setAllMarker(pharmInfoData)
+            }
+        }
+    }
+
+    private fun setAllMarker(pharm: PharmacyInfo?) {
+        pharm?.also { p ->
+            p.features.forEach {
+                mMap.addMarker(
+                    MarkerOptions()
+                        .position(
+                            LatLng(
+                                it.geometry.coordinates.get(1), it.geometry.coordinates.get(0)
+                            )
+                        )
+                        .title("${it.properties.name}")
+                        .snippet("成人:${it.properties.mask_adult} , 兒童:${it.properties.mask_child} ")
+                )
+            }
         }
     }
 

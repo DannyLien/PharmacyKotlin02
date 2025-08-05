@@ -1,5 +1,6 @@
 package com.hom.pharmacykotlin
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -25,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private var selectCounty: String = ""
     private var pharmInfoData: PharmacyInfo? = null
     private lateinit var viewModel: PharmViewModel
-
     //
     private lateinit var progressBar: ProgressBar
     private lateinit var spinnerCounty: Spinner
@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
                         it.properties.town == selectTown
             }
             if (filterData != null) {
-                recy.adapter = PharmAdapter(this,filterData)
+                recy.adapter = PharmAdapter(this, filterData)
             }
         }
     }
@@ -133,7 +133,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.action_maps -> {
-
+                Intent(this, MapsActivity::class.java).also {
+                    startActivity(it)
+                }
                 true
             }
 

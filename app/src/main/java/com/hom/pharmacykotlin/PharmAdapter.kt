@@ -34,6 +34,7 @@ class PharmAdapter(val _context: Context, val filterData: List<Feature>) :
 
     object PharmDataHolder {
         lateinit var pharmacyData: Feature
+        lateinit var pharmacyInfo: PharmacyInfo
     }
 
     override fun onBindViewHolder(holder: PharmViewHolder, position: Int) {
