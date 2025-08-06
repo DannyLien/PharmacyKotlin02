@@ -1,6 +1,7 @@
 package com.hom.pharmacykotlin
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -20,13 +21,26 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
+import com.hom.pharmacykotlin.PharmAdapter.PharmDataHolder
+import com.hom.pharmacykotlin.PharmViewModel.Companion.pharmUrl_132
+import com.hom.pharmacykotlin.data.PharmacyInfo
 import com.hom.pharmacykotlin.databinding.ActivityMapsBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.net.URL
 import kotlin.math.truncate
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
-    private val TAG: String? = MapsActivity::class.java.simpleName
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
+    private lateinit var mContext: MapsActivity
+    private var pharmInfo: PharmacyInfo? = null
     private var myMarker: Marker? = null
     private lateinit var fusedLPC: FusedLocationProviderClient
+    private val TAG: String? = MapsActivity::class.java.simpleName
+    private lateinit var binding: ActivityMapsBinding
+    private lateinit var mMap: GoogleMap
+
     private val requestLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -39,13 +53,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             Snackbar.make(binding.root, "Location Perssion Denied", Snackbar.LENGTH_LONG).show()
         }
     }
-    private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        mContext = this
         //
         fusedLPC = LocationServices.getFusedLocationProviderClient(this)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -56,7 +69,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        upDataLocation()
         myLocation()
+        setUpdataPharmInfo()
+        mMap.setInfoWindowAdapter(MyInfoAdapter(this))
+        mMap.setOnInfoWindowClickListener(this)
+    }
+
+    private fun setUpdataPharmInfo() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val json = URL(pharmUrl_132).readText()
+            pharmInfo = Gson().fromJson(json, PharmacyInfo::class.java)
+            runOnUiThread {
+                setAllMarker(pharmInfo)
+            }
+        }
+    }
+
+    private fun setAllMarker(pharmInfo: PharmacyInfo?) {
+        pharmInfo.also { pharm ->
+            pharm?.features?.forEach {
+                mMap.addMarker(
+                    MarkerOptions().position(
+                        LatLng(it.geometry.coordinates.get(1), it.geometry.coordinates.get(0))
+                    ).title("${it.properties.name}")
+                        .snippet("成人:${it.properties.mask_adult},兒童:${it.properties.mask_child}")
+                )
+            }
+        }
     }
 
     private fun myLocation() {
@@ -83,6 +123,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             upDataLocation()
             true
         }
+
     }
 
     private fun upDataLocation() {
@@ -108,6 +149,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f))
             myMarker = mMap.addMarker(MarkerOptions().position(latlng).title("My Location"))
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -125,6 +167,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         return super.onOptionsItemSelected(item)
     }
+
+    override fun onInfoWindowClick(marker: Marker) {
+        marker.title?.also {
+            val filterTitle =
+                pharmInfo?.features?.filter {
+                    it.properties.name == marker.title
+                }
+            if (!filterTitle.isNullOrEmpty()) {
+                PharmDataHolder.pharmacyData = filterTitle.first()
+                Intent(this, PharmacyDetail::class.java)
+                    .also { startActivity(it) }
+            }
+        }
+    }
+
+
 }
 
 
